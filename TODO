@@ -1,0 +1,17 @@
+General
+=======
+
+* Reduce memory usage
+* Speed up data loading
+* Don't iterate twice over map data (solid/flat blocks)
+* Loose dependency on numpy
+* Simplify geometry
+
+Map
+===
+
+* Get the other two cities working (texture errors)
+* Flip faces on blocks (junction signs)
+* Fix alpha blending issues
+* Fix texture mapping on the side of slopes
+* Add animated blocks
