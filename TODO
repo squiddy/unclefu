@@ -7,7 +7,6 @@ General
 Map
 ===
 
-* Get the other two cities working (texture errors)
 * Flip faces on blocks (junction signs)
 * Fix alpha blending issues
 * Fix texture mapping on the side of slopes

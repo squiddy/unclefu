@@ -48,6 +48,15 @@ class Map(object):
         self.style = Style()
         self.style.load_from_file(open('data/STYLE00%d.G24' % self.style_number))
 
+        # The lid attribute in a block stores a relative offset into the lid tiles.
+        # By making it absolute, it becomes easier to work with on the client.
+        lid_tile_offset = self.style.side_size / (64 * 64)
+        for i in range(len(self.block_table)):
+            block = self.block_table[i]
+            if block.lid:
+                block = block._replace(lid=block.lid + lid_tile_offset)
+                self.block_table[i] = block
+
     def _read_grid(self, f):
         grid_columns = unpack_file('I' * 256 * 256, f)
         column_iter = iter(unpack_file('H' * (self.column_size / 2), f))

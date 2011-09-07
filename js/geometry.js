@@ -105,8 +105,7 @@ SolidBlockGeometry = function ( block_data ) {
 			px: block_data[2],
 			nz: block_data[3],
 			pz: block_data[4],
-			// offset for lid tiles, only when the face is visible
-			py: ( block_data[5] === 0 ) ? 0 : block_data[5] + 195
+			py: block_data[5]
 		},
 		faces = {
 			pz: new THREE.Face4( 6, 2, 3, 7, null, null ),
@@ -217,8 +216,7 @@ FlatBlockGeometry = function ( block_data ) {
 	var tiles = {
 			px: block_data[2],
 			nz: block_data[3],
-			// offset for lid tiles, only when the face is visible
-			py: ( block_data[5] === 0 ) ? 0 : block_data[5] + 195
+			py: block_data[5]
 		},
 		faces = {
 			px: new THREE.Face4( 3, 0, 2, 5, null, null ),
