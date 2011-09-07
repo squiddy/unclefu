@@ -22,19 +22,6 @@ function setSpriteTile( geom, coords ) {
 	}
 }
 
-// Avoid callback hell, make synchronous requests to the server.
-// FIXME this is really wrong. Maybe jQuery's deferreds help?
-function getData( url ) {
-	var d;
-
-	$.ajaxSetup({async: false});
-	$.getJSON(url, function(data) {
-		d = data;
-	});
-
-	return d;
-}
-
 
 function loadTexture( url ) {
     var texture = THREE.ImageUtils.loadTexture( url, THREE.UVMapping );
@@ -62,23 +49,35 @@ var Game = {
 		// Move camera to map's center
 		this.camera.translateX( this.MAP_DIMENSION / 2 );
 		this.camera.translateY( -this.MAP_DIMENSION / 2 );
+
+		this.loadData();
 	},
 
 	loadData: function() {
-		this.block_data = getData( "_build/blocks.json" );
-		this.map_data = getData( "_build/map.json" );
-		this.object_pos_data = getData( "_build/object_pos.json" );
-		this.object_info_data = getData( "_build/object_info.json" );
-		this.car_info_data = getData( "_build/car_info.json" );
-		this.sprite_coords_data = getData( "_build/sprites.json" );
-
 		this.tiles_texture = loadTexture( "_build/tiles.png" );
 		this.tiles_transparent_texture = loadTexture( "_build/tiles_transparent.png" );
 		this.sprites_texture = loadTexture( "_build/sprites.png" );
+
+		var requests = $.when(
+			this.getData( "block_data", "_build/blocks.json" ),
+			this.getData( "map_data", "_build/map.json" ),
+			this.getData( "object_pos_data", "_build/object_pos.json" ),
+			this.getData( "object_info_data", "_build/object_info.json" ),
+			this.getData( "car_info_data", "_build/car_info.json" ),
+			this.getData( "sprite_coords_data", "_build/sprites.json" )
+		)
+
+		requests.then( $.proxy( this.loadMap, this ) );
+	},
+
+	getData: function( name, url ) {
+		var self = this;
+		return $.getJSON( url ).success(function( data ) {
+			self[ name ] = data;
+		});
 	},
 
 	loadMap: function() {
-		this.loadData();
 		this.loadMapTiles();
 		this.loadMapObjects();
 		this.loadMapFlatBlocks();
