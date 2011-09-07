@@ -3,7 +3,6 @@ General
 
 * Reduce memory usage
 * Speed up data loading
-* Don't iterate twice over map data (solid/flat blocks)
 * Loose dependency on numpy
 
 Map

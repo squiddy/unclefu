@@ -78,14 +78,13 @@ var Game = {
 	},
 
 	loadMap: function() {
-		this.loadMapTiles();
+		this.loadBlocks();
 		this.loadMapObjects();
-		this.loadMapFlatBlocks();
 	},
 
-	// The surfaces that make up the streets, pavements and buildings.
-	loadMapTiles: function() {
-		var geometry = new THREE.Geometry();
+	loadBlocks: function() {
+		var solid_geometry = new THREE.Geometry(),
+			flat_geometry = new THREE.Geometry();
 
 		for ( var i = 0, count = this.map_data.length; i < count; i++ ) {
 			var column = this.map_data[ i ],
@@ -98,55 +97,29 @@ var Game = {
 					mesh;
 
 				if ( data[ 7 ] ) {
-					// Render flat (transparent) blocks in a separate mesh.
-					continue;
+					mesh = new THREE.Mesh( new FlatBlockGeometry( data ) );
+					mesh.position.set( x + 0.5, block_count - j, z + 0.5 );
+					THREE.GeometryUtils.merge( flat_geometry, mesh );
+				} else {
+					mesh = new THREE.Mesh( new SolidBlockGeometry( data ) );
+					mesh.position.set( x + 0.5, block_count - j, z + 0.5 );
+					THREE.GeometryUtils.merge( solid_geometry, mesh );
 				}
 
-				mesh = new THREE.Mesh( new SolidBlockGeometry( data ) );
-				mesh.position.set( x + 0.5, block_count - j, z + 0.5 );
-				THREE.GeometryUtils.merge( geometry, mesh );
 		    };
 		};
 
-		var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial({ color: 0xffffff, map: this.tiles_texture }) );
+		var mesh = new THREE.Mesh( solid_geometry, new THREE.MeshBasicMaterial({ color: 0xffffff, map: this.tiles_texture }) );
 		mesh.rotation.x = 90 * Math.PI / 180;
 		mesh.matrixAutoUpdate = false;
 		mesh.updateMatrix();
-
 		this.scene.addObject( mesh );
-	},
 
-	// Flat blocks are transparent, and only show the left, top and up faces of a cube.
-	loadMapFlatBlocks: function() {
-		var geometry = new THREE.Geometry();
-
-		for ( var i = 0, count = this.map_data.length; i < count; i++ ) {
-			var column = this.map_data[ i ],
-		    	x = i % this.MAP_DIMENSION,
-				z = Math.floor( i / this.MAP_DIMENSION );
-
-			for ( var j = 0, block_count = column.length; j < block_count; j++ ) {
-				var block = column[ j ],
-					data = this.block_data[ block ],
-					mesh;
-
-				// Ignore everything that's not a flat block.
-				if ( !data[ 7 ] ) {
-					continue;
-				}
-
-				mesh = new THREE.Mesh( new FlatBlockGeometry( data ) );
-				mesh.position.set( x + 0.5, block_count - j, z + 0.5 );
-				THREE.GeometryUtils.merge( geometry, mesh );
-		    };
-		};
-
-		var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial({ color: 0xffffff, map: this.tiles_transparent_texture, transparent: true }) );
+		mesh = new THREE.Mesh( flat_geometry, new THREE.MeshBasicMaterial({ color: 0xffffff, map: this.tiles_transparent_texture, transparent: true }) );
 		mesh.rotation.x = 90 * Math.PI / 180;
 		mesh.doubleSided = true;
 		mesh.matrixAutoUpdate = false;
 		mesh.updateMatrix();
-
 		this.scene.addObject( mesh );
 	},
 
