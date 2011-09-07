@@ -12,6 +12,7 @@ from converter.style import Style
 print "parsing map ..."
 m = Map()
 m.load_from_file(open('data/NYC.CMP'))
+m.export()
 
 print "parsing style ..."
 s = Style()

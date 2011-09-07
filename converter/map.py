@@ -39,51 +39,59 @@ class Map(object):
         self.object_pos_size, self.column_size, self.block_size, \
         self.nav_data_size = unpack_file('IBBHIIIII', f)
 
-        grid_size = 256 * 256
-        self.grid = unpack_file('I' * grid_size, f)
+        self._read_grid(f)
+        self._read_block_table(f, self.block_size)
+        self._read_object_positions(f, self.object_pos_size)
+        self._read_navigation_data(f, self.nav_data_size)
 
+    def _read_grid(self, f):
+        grid_columns = unpack_file('I' * 256 * 256, f)
         column_iter = iter(unpack_file('H' * (self.column_size / 2), f))
 
-        self.cube_stack_table = {}
+        cube_stack_table = {}
         pos = 0
         try:
             while True:
                 d = column_iter.next()
                 cubes = 6 - d
 
-                self.cube_stack_table[pos] = [column_iter.next() for i in range(cubes)]
+                cube_stack_table[pos] = [column_iter.next() for i in range(cubes)]
                 pos += 2 * (1 + cubes)
         except StopIteration:
             pass
 
+        self.grid = []
+        for column in grid_columns:
+            stack = cube_stack_table[column]
+            self.grid.append(stack)
+
+    def _read_block_table(self, f, size):
+        block_struct = 'HBBBBBB'
+
         self.block_table = []
-        for i in range(self.block_size / 8):
-            self.block_table.append(Block(*unpack_file('HBBBBBB', f)))
+        for i in range(size / calcsize(block_struct)):
+            block = Block(*unpack_file(block_struct, f))
+            self.block_table.append(block)
 
-        self._read_object_positions(f, self.object_pos_size)
-
+    def _read_navigation_data(self, f, size):
+        nav_struct = 'BBBBB30s'
         self.districts = []
 
-        f.seek(-self.nav_data_size, os.SEEK_END)
-        for i in range(self.nav_data_size / 35):
-            data = unpack_file('BBBBB30s', f)
+        f.seek(-size, os.SEEK_END)
+        for i in range(size / calcsize(nav_struct)):
+            data = unpack_file(nav_struct, f)
             self.districts.append(District(*data))
-
-        a = []
-        for i in range(grid_size):
-            column = self.cube_stack_table[self.grid[i]]
-            a.append(column)
-
-        serialize('_build/map.json', a)
-        serialize('_build/blocks.json', [x.data() for x in self.block_table])
 
     def _read_object_positions(self, f, size):
         object_pos_struct = 'HHHBBHHH'
         block_size = calcsize(object_pos_struct)
 
-        object_pos = []
+        self.object_pos = []
         for i in range(size / block_size):
             data = unpack_file(object_pos_struct, f)
-            object_pos.append(ObjectPos(*data))
+            self.object_pos.append(ObjectPos(*data))
 
-        serialize('_build/object_pos.json', [(o.x, o.y, o.z, o.type, o.remap >= 128, o.rotation / 1024.0 * 360) for o in object_pos])
+    def export(self):
+        serialize('_build/map.json', self.grid)
+        serialize('_build/blocks.json', [x.data() for x in self.block_table])
+        serialize('_build/object_pos.json', [(o.x, o.y, o.z, o.type, o.remap >= 128, o.rotation / 1024.0 * 360) for o in self.object_pos])
