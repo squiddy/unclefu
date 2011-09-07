@@ -1,11 +1,11 @@
 import itertools
-import json
 import os
-
 from collections import namedtuple
 from struct import unpack, calcsize
 
 import numpy as np
+
+from converter import serialize
 
 
 ObjectPos = namedtuple('ObjectPos', 'x y z type remap rotation pitch roll')
@@ -77,11 +77,8 @@ class Map(object):
             column = self.cube_stack_table[self.grid[x, y]]
             a.append(map(int, column))
 
-        with open('_build/map.json', 'w') as f:
-            f.write(json.dumps(a, separators=(',',':')))
-
-        with open('_build/blocks.json', 'w') as f:
-            f.write(json.dumps([x.data() for x in self.block_table], separators=(',',':')))
+        serialize('_build/map.json', a)
+        serialize('_build/blocks.json', [x.data() for x in self.block_table])
 
     def _read_object_positions(self, f, size):
         object_pos_struct = 'HHHBBHHH'
@@ -92,5 +89,4 @@ class Map(object):
             data = unpack(object_pos_struct, f.read(block_size))
             object_pos.append(ObjectPos(*data))
 
-        with open('_build/object_pos.json', 'w') as f:
-            f.write(json.dumps([(o.x, o.y, o.z, o.type, o.remap >= 128, o.rotation / 1024.0 * 360) for o in object_pos], separators=(',',':')))
+        serialize('_build/object_pos.json', [(o.x, o.y, o.z, o.type, o.remap >= 128, o.rotation / 1024.0 * 360) for o in object_pos])

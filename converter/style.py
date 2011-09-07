@@ -1,11 +1,12 @@
 import itertools
-import json
 import StringIO
 import struct
 from collections import namedtuple
 from struct import unpack, unpack_from, calcsize
 
 from PIL import Image
+
+from converter import serialize
 
 
 unpack_file = lambda c, f: unpack(c, f.read(calcsize(c)))
@@ -169,8 +170,7 @@ class Style(object):
 
                 result[g].append(coords)
 
-        with open('_build/sprites.json', 'w') as f:
-            f.write(json.dumps(result, separators=(',',':')))
+        serialize('_build/sprites.json', result)
 
     def _read_sprite_numbers(self, f, size):
         fields = 'arrow digits boat bux bus car object ped speedo tank ' \
@@ -228,8 +228,7 @@ class Style(object):
 
         print "car infos:", len(self.car_infos)
 
-        with open('_build/car_info.json', 'w') as f:
-            f.write(json.dumps([(c.sprite_num, ) for c in self.car_infos], separators=(',',':')))
+        serialize('_build/car_info.json', [(c.sprite_num, ) for c in self.car_infos])
 
     def _read_animations(self, f, size):
         Animation = namedtuple('Animation', 'block which speed frame_count frames')
@@ -256,8 +255,7 @@ class Style(object):
 
         print "object infos:", len(self.object_infos)
 
-        with open('_build/object_info.json', 'w') as f:
-            f.write(json.dumps(self.object_infos, separators=(',',':')))
+        serialize('_build/object_info.json', self.object_infos)
 
     def colorize_tiles(self, tiles, palette_index):
         width = 256
