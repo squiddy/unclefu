@@ -3,7 +3,6 @@ General
 
 * Reduce memory usage
 * Speed up data loading
-* Loose dependency on numpy
 
 Map
 ===

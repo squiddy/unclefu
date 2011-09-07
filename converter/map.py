@@ -1,9 +1,6 @@
-import itertools
 import os
 from collections import namedtuple
 from struct import calcsize
-
-import numpy as np
 
 from converter import serialize, unpack_file
 
@@ -42,19 +39,19 @@ class Map(object):
         self.object_pos_size, self.column_size, self.block_size, \
         self.nav_data_size = unpack_file('IBBHIIIII', f)
 
-        grid_size = 256 * 256;
-        self.grid = np.fromstring(f.read(grid_size * 4), dtype=np.uint32).reshape((256, 256))
+        grid_size = 256 * 256
+        self.grid = unpack_file('I' * grid_size, f)
 
-        table = iter(np.fromstring(f.read(self.column_size), dtype=np.int16))
+        column_iter = iter(unpack_file('H' * (self.column_size / 2), f))
 
         self.cube_stack_table = {}
         pos = 0
         try:
             while True:
-                d = table.next()
+                d = column_iter.next()
                 cubes = 6 - d
 
-                self.cube_stack_table[pos] = [table.next() for i in range(cubes)]
+                self.cube_stack_table[pos] = [column_iter.next() for i in range(cubes)]
                 pos += 2 * (1 + cubes)
         except StopIteration:
             pass
@@ -73,9 +70,9 @@ class Map(object):
             self.districts.append(District(*data))
 
         a = []
-        for (x, y) in itertools.product(range(256), range(256)):
-            column = self.cube_stack_table[self.grid[x, y]]
-            a.append(map(int, column))
+        for i in range(grid_size):
+            column = self.cube_stack_table[self.grid[i]]
+            a.append(column)
 
         serialize('_build/map.json', a)
         serialize('_build/blocks.json', [x.data() for x in self.block_table])
