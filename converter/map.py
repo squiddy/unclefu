@@ -1,11 +1,11 @@
 import itertools
 import os
 from collections import namedtuple
-from struct import unpack, calcsize
+from struct import calcsize
 
 import numpy as np
 
-from converter import serialize
+from converter import serialize, unpack_file
 
 
 ObjectPos = namedtuple('ObjectPos', 'x y z type remap rotation pitch roll')
@@ -40,7 +40,7 @@ class Map(object):
     def load_from_file(self, f):
         self.version, self.style, self.sample, _, self.route_size, \
         self.object_pos_size, self.column_size, self.block_size, \
-        self.nav_data_size = unpack('IBBHIIIII', f.read(28))
+        self.nav_data_size = unpack_file('IBBHIIIII', f)
 
         grid_size = 256 * 256;
         self.grid = np.fromstring(f.read(grid_size * 4), dtype=np.uint32).reshape((256, 256))
@@ -61,7 +61,7 @@ class Map(object):
 
         self.block_table = []
         for i in range(self.block_size / 8):
-            self.block_table.append(Block(*unpack('HBBBBBB', f.read(8))))
+            self.block_table.append(Block(*unpack_file('HBBBBBB', f)))
 
         self._read_object_positions(f, self.object_pos_size)
 
@@ -69,7 +69,7 @@ class Map(object):
 
         f.seek(-self.nav_data_size, os.SEEK_END)
         for i in range(self.nav_data_size / 35):
-            data = unpack('BBBBB30s', f.read(35))
+            data = unpack_file('BBBBB30s', f)
             self.districts.append(District(*data))
 
         a = []
@@ -86,7 +86,7 @@ class Map(object):
 
         object_pos = []
         for i in range(size / block_size):
-            data = unpack(object_pos_struct, f.read(block_size))
+            data = unpack_file(object_pos_struct, f)
             object_pos.append(ObjectPos(*data))
 
         serialize('_build/object_pos.json', [(o.x, o.y, o.z, o.type, o.remap >= 128, o.rotation / 1024.0 * 360) for o in object_pos])

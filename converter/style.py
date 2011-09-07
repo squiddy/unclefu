@@ -6,10 +6,7 @@ from struct import unpack, unpack_from, calcsize
 
 from PIL import Image
 
-from converter import serialize
-
-
-unpack_file = lambda c, f: unpack(c, f.read(calcsize(c)))
+from converter import serialize, unpack_file
 
 
 class PaletteIndex(object):
