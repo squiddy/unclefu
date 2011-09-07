@@ -106,47 +106,46 @@ class Style(object):
 
     def load_from_file(self, f):
         # Header
-        version, side_size, lid_size, aux_size, anim_size, \
-        clut_size, tileclut_size, spriteclut_size, \
-        newcarclut_size, fontclut_size, palette_index_size, \
-        object_info_size, car_size, sprite_info_size, \
-        sprite_graphics_size, sprite_numbers_size = unpack('I' * 16, f.read(64))
+        self.version, self.side_size, self.lid_size, self.aux_size, \
+        self.anim_size, self.clut_size, self.tileclut_size, self.spriteclut_size, \
+        self.newcarclut_size, self.fontclut_size, self.palette_index_size, \
+        self.object_info_size, self.car_size, self.sprite_info_size, \
+        self.sprite_graphics_size, self.sprite_numbers_size = unpack_file('I' * 16, f)
 
         # Tiles
-        size = side_size + lid_size + aux_size
+        size = self.side_size + self.lid_size + self.aux_size
         if size % (64 * 64 * 4):
             size += (64 * 64 * 4) - (size % (64 * 64 * 4))
         side_lid_aux = f.read(size)
 
         # Animations
-        self._read_animations(f, anim_size)
+        self._read_animations(f, self.anim_size)
 
         # Palette
-        clut = f.read(clut_size)
-        if clut_size % (64 * 1024):
-            f.read(64*1024 - (clut_size % (64*1024)))
+        clut = f.read(self.clut_size)
+        if self.clut_size % (64 * 1024):
+            f.read(64*1024 - (self.clut_size % (64*1024)))
 
-        palette_index_data = f.read(palette_index_size)
-        self.palette_index = PaletteIndex(tile_index_size=tileclut_size / 1024)
-        self.palette_index.read_palettes(clut, clut_size)
-        self.palette_index.read_index(palette_index_data, palette_index_size)
+        palette_index_data = f.read(self.palette_index_size)
+        self.palette_index = PaletteIndex(tile_index_size=self.tileclut_size / 1024)
+        self.palette_index.read_palettes(clut, self.clut_size)
+        self.palette_index.read_index(palette_index_data, self.palette_index_size)
 
         # Object infos
-        self._read_object_info(f, object_info_size)
+        self._read_object_info(f, self.object_info_size)
 
         # Car infos
-        self._read_car_infos(f, car_size)
+        self._read_car_infos(f, self.car_size)
 
         # Sprites
-        sprite_info = f.read(sprite_info_size)
-        sprite_graphics = f.read(sprite_graphics_size)
-        self._read_sprite_numbers(f, sprite_numbers_size)
+        sprite_info = f.read(self.sprite_info_size)
+        sprite_graphics = f.read(self.sprite_graphics_size)
+        self._read_sprite_numbers(f, self.sprite_numbers_size)
 
         self.sprites = Sprite(StringIO.StringIO(sprite_info), sprite_graphics, self.palette_index)
         self.sprites.colorize()
 
         self.colorize_tiles(side_lid_aux, self.palette_index)
-        self._create_sprite_texture_coordinates()
 
     def _create_sprite_texture_coordinates(self):
         groups = ('car', 'object', )
@@ -164,10 +163,9 @@ class Style(object):
                 y = sprite.page * 256 + sprite.y
 
                 coords = (sprite.width, sprite.height, x / width, y / height, (x + sprite.width) / width, (y + sprite.height) / height)
-
                 result[g].append(coords)
 
-        serialize('_build/sprites.json', result)
+        return result
 
     def _read_sprite_numbers(self, f, size):
         fields = 'arrow digits boat bux bus car object ped speedo tank ' \
@@ -225,8 +223,6 @@ class Style(object):
 
         print "car infos:", len(self.car_infos)
 
-        serialize('_build/car_info.json', [(c.sprite_num, ) for c in self.car_infos])
-
     def _read_animations(self, f, size):
         Animation = namedtuple('Animation', 'block which speed frame_count frames')
         self.animations = []
@@ -251,8 +247,6 @@ class Style(object):
             self.object_infos.append(ObjectInfo(*data))
 
         print "object infos:", len(self.object_infos)
-
-        serialize('_build/object_info.json', self.object_infos)
 
     def colorize_tiles(self, tiles, palette_index):
         width = 256
@@ -299,3 +293,8 @@ class Style(object):
             img.paste(tile_image, coords)
 
         img.save('_build/tiles.png', 'png')
+
+    def export(self):
+        serialize('_build/sprites.json', self._create_sprite_texture_coordinates())
+        serialize('_build/car_info.json', [(c.sprite_num, ) for c in self.car_infos])
+        serialize('_build/object_info.json', self.object_infos)

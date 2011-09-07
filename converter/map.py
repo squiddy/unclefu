@@ -3,6 +3,7 @@ from collections import namedtuple
 from struct import calcsize
 
 from converter import serialize, unpack_file
+from converter.style import Style
 
 
 ObjectPos = namedtuple('ObjectPos', 'x y z type remap rotation pitch roll')
@@ -35,7 +36,7 @@ class Block(namedtuple('Block', 'type_map type_map_ext left right top bottom lid
 class Map(object):
 
     def load_from_file(self, f):
-        self.version, self.style, self.sample, _, self.route_size, \
+        self.version, self.style_number, self.sample, _, self.route_size, \
         self.object_pos_size, self.column_size, self.block_size, \
         self.nav_data_size = unpack_file('IBBHIIIII', f)
 
@@ -43,6 +44,9 @@ class Map(object):
         self._read_block_table(f, self.block_size)
         self._read_object_positions(f, self.object_pos_size)
         self._read_navigation_data(f, self.nav_data_size)
+
+        self.style = Style()
+        self.style.load_from_file(open('data/STYLE00%d.G24' % self.style_number))
 
     def _read_grid(self, f):
         grid_columns = unpack_file('I' * 256 * 256, f)
@@ -95,3 +99,5 @@ class Map(object):
         serialize('_build/map.json', self.grid)
         serialize('_build/blocks.json', [x.data() for x in self.block_table])
         serialize('_build/object_pos.json', [(o.x, o.y, o.z, o.type, o.remap >= 128, o.rotation / 1024.0 * 360) for o in self.object_pos])
+
+        self.style.export()

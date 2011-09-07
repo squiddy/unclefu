@@ -6,16 +6,8 @@ in the _build directory.
 """
 
 from converter.map import Map
-from converter.style import Style
 
 
-print "parsing map ..."
 m = Map()
 m.load_from_file(open('data/NYC.CMP'))
 m.export()
-
-print "parsing style ..."
-s = Style()
-s.load_from_file(open('data/STYLE00%d.G24' % m.style))
-
-print "done"
