@@ -55,7 +55,6 @@ var Game = {
 
 	loadData: function() {
 		this.tiles_texture = loadTexture( "_build/tiles.png" );
-		this.tiles_transparent_texture = loadTexture( "_build/tiles_transparent.png" );
 		this.sprites_texture = loadTexture( "_build/sprites.png" );
 
 		var requests = $.when(
@@ -115,7 +114,7 @@ var Game = {
 		mesh.updateMatrix();
 		this.scene.addObject( mesh );
 
-		mesh = new THREE.Mesh( flat_geometry, new THREE.MeshBasicMaterial({ color: 0xffffff, map: this.tiles_transparent_texture, transparent: true }) );
+		mesh = new THREE.Mesh( flat_geometry, new THREE.MeshBasicMaterial({ color: 0xffffff, map: this.tiles_texture, transparent: true }) );
 		mesh.rotation.x = 90 * Math.PI / 180;
 		mesh.doubleSided = true;
 		mesh.matrixAutoUpdate = false;

@@ -260,28 +260,42 @@ class Style(object):
         tile_size = 64
 
         orig_tiles = Image.fromstring('P', (width, height), tiles)
-        transparent = []
-        pix = orig_tiles.load()
-        for x,y in itertools.product(range(width), range(height)):
-            if pix[x, y] == 0:
-                transparent.append((x, y))
 
-        img = Image.new('RGB', (width, height))
-        img = img.convert('RGBA')
+        img = Image.new('RGBA', (2048, 2048))
         for tile in range(len(tiles) / tile_size**2):
-            tx = tile % 4
-            ty = tile / 4
-            
-            coords = ((tx * tile_size, ty * tile_size, (tx + 1) * tile_size, (ty + 1) * tile_size))
+            stx = tile % 4
+            sty = tile / 4
+
+            coords = ((stx * tile_size, sty * tile_size, (stx + 1) * tile_size, (sty + 1) * tile_size))
             tile_image = orig_tiles.crop(coords).copy()
+
+            # Keep track of pixels that become transparent after applying
+            # the palette
+            transparent = []
+            pix = tile_image.load()
+            for x,y in itertools.product(range(tile_size), range(tile_size)):
+                if pix[x, y] == 0:
+                    transparent.append((x, y))
+
             tile_image.putpalette(palette_index.lookup_for_tile(tile))
             tile_image = tile_image.convert('RGBA')
 
+            # Paste non-transparent version on final image
+            dtx = tile % (2048 / 64)
+            dty = tile / (2048 / 64)
+            coords = ((dtx * tile_size, dty * tile_size, (dtx + 1) * tile_size, (dty + 1) * tile_size))
+            img.paste(tile_image, coords)
+
+            # Make pixels transparent
+            pix = tile_image.load()
+            for x, y in transparent:
+                pix[x, y] = (0, 0, 0, 0)
+
+            # Paste transparent version on final image
+            tile += 384
+            dtx = tile % (2048 / 64)
+            dty = tile / (2048 / 64)
+            coords = ((dtx * tile_size, dty * tile_size, (dtx + 1) * tile_size, (dty + 1) * tile_size))
             img.paste(tile_image, coords)
 
         img.save('_build/tiles.png', 'png')
-
-        pix = img.load()
-        for x,y in transparent:
-            pix[x,y] = (0,0,0,0)
-        img.save('_build/tiles_transparent.png', 'png')

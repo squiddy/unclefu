@@ -1,15 +1,18 @@
-function calculateTileUVs( tile, rotation ) {
-	var horizontal_tiles = 4,
-		vertical_tiles = 97,
-		s = tile % horizontal_tiles,
-		t = Math.floor( tile / horizontal_tiles ),
+function calculateTileUVs( tile, rotation, transparent ) {
+	if ( transparent === true ) {
+		tile += 384;
+	}
+
+	var tiles_per_axis = 32,
+		s = tile % tiles_per_axis,
+		t = Math.floor( tile / tiles_per_axis ),
 		uvs;
 
 	uvs = [
-		new THREE.UV(  s      / horizontal_tiles,  t      / vertical_tiles ),
-		new THREE.UV(  s      / horizontal_tiles, (t + 1) / vertical_tiles ),
-		new THREE.UV( (s + 1) / horizontal_tiles, (t + 1) / vertical_tiles ),
-		new THREE.UV( (s + 1) / horizontal_tiles,  t      / vertical_tiles )
+		new THREE.UV(  s      / tiles_per_axis,  t      / tiles_per_axis ),
+		new THREE.UV(  s      / tiles_per_axis, (t + 1) / tiles_per_axis ),
+		new THREE.UV( (s + 1) / tiles_per_axis, (t + 1) / tiles_per_axis ),
+		new THREE.UV( (s + 1) / tiles_per_axis,  t      / tiles_per_axis )
 	];
 
 	if ( rotation !== undefined ) {
@@ -235,7 +238,7 @@ FlatBlockGeometry = function ( block_data ) {
 		this.faces.push( faces[face] );
 
 		var rotation = ( face === 'py' ) ? block_data[ 6 ] : 0;
-		var uvs = calculateTileUVs( tiles[face], rotation );
+		var uvs = calculateTileUVs( tiles[face], rotation, true );
 
 		this.faceVertexUvs[ 0 ].push( uvs );
 	}
