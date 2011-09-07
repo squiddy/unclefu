@@ -102,12 +102,7 @@ var Game = {
 					continue;
 				}
 
-				if ( data[ 8 ] ) {
-					mesh = new THREE.Mesh( new SlopeBlockGeometry( data ) );
-				} else {
-					mesh = new THREE.Mesh( new SolidBlockGeometry( data ) );
-				}
-
+				mesh = new THREE.Mesh( new SolidBlockGeometry( data ) );
 				mesh.position.set( x + 0.5, block_count - j, z + 0.5 );
 				THREE.GeometryUtils.merge( geometry, mesh );
 		    };
@@ -140,12 +135,7 @@ var Game = {
 					continue;
 				}
 
-				if ( data[ 8 ] ) {
-					mesh = new THREE.Mesh( new FlatSlopeBlockGeometry( data ) );
-				} else {
-					mesh = new THREE.Mesh( new FlatBlockGeometry( data ) );
-				}
-
+				mesh = new THREE.Mesh( new FlatBlockGeometry( data ) );
 				mesh.position.set( x + 0.5, block_count - j, z + 0.5 );
 				THREE.GeometryUtils.merge( geometry, mesh );
 		    };
